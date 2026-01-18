@@ -1,0 +1,2114 @@
+
+<!DOCTYPE html>
+<!-- Version: 1.6 - Local model quick switcher (Qwen/Dolphin) -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - AI Assistant</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github-dark.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f5f5f5;
+      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
+      overflow: hidden;
+    }
+    .app-container {
+      display: flex;
+      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .sidebar {
+      width: 260px;
+      background: #f8f9fa;
+      border-right: 1px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .sidebar-header h2 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .new-chat-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .new-chat-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .conversations-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .conversation-item {
+      padding: 0.75rem;
+      margin-bottom: 0.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .conversation-item:hover {
+      background: #e9ecef;
+    }
+    .conversation-item.active {
+      background: #667eea;
+      color: white;
+    }
+    .conversation-title {
+      flex: 1;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .conversation-date {
+      font-size: 0.75rem;
+      color: #999;
+      white-space: nowrap;
+    }
+    .conversation-item.active .conversation-date {
+      color: rgba(255,255,255,0.8);
+    }
+    .delete-conversation {
+      opacity: 0;
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 1rem;
+    }
+    .conversation-item:hover .delete-conversation {
+      opacity: 0.6;
+    }
+    .delete-conversation:hover {
+      opacity: 1 !important;
+    }
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .header-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .token-counter {
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .token-counter-detail {
+      font-size: 0.75rem;
+      opacity: 0.9;
+      margin-top: 0.25rem;
+    }
+    .model-select, .clear-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .model-select:hover, .clear-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    #localModelSwitcher {
+      display: flex;
+      gap: 5px;
+    }
+    .model-switch-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .model-switch-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .model-switch-btn.active {
+      background: rgba(255,255,255,0.4);
+      border-color: rgba(255,255,255,0.6);
+      font-weight: bold;
+    }
+    .model-select {
+      max-width: 250px;
+    }
+    .language-select {
+      max-width: 100px;
+    }
+    .model-select option {
+      background: #764ba2;
+      color: white;
+    }
+    .model-select optgroup {
+      background: #5a3980;
+      font-weight: bold;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      will-change: contents;
+    }
+    .message {
+      display: flex;
+      gap: 1rem;
+      max-width: 80%;
+      animation: fadeIn 0.3s ease-in;
+      position: relative;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .message.user .message-avatar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .message.assistant .message-avatar {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .message-content {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 12px;
+      line-height: 1.6;
+      word-wrap: break-word;
+      flex: 1;
+    }
+    .message.user .message-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .message-actions {
+      position: absolute;
+      top: -0.5rem;
+      right: -0.5rem;
+      display: flex;
+      gap: 0.25rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .message.user .message-actions {
+      left: -0.5rem;
+      right: auto;
+    }
+    .message:hover .message-actions {
+      opacity: 1;
+    }
+    .message-action-btn {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .message-action-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+    }
+    .edit-area {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .edit-textarea {
+      flex: 1;
+      padding: 0.5rem;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+      min-height: 60px;
+    }
+    .edit-btn {
+      padding: 0.5rem 1rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .edit-btn-cancel {
+      background: #999;
+    }
+    .message-content p {
+      margin-bottom: 0.75rem;
+    }
+    .message-content p:last-child {
+      margin-bottom: 0;
+    }
+    .message-content ul, .message-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .message-content h1, .message-content h2, .message-content h3 {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .message-content h1 { font-size: 1.5rem; }
+    .message-content h2 { font-size: 1.25rem; }
+    .message-content h3 { font-size: 1.1rem; }
+    .message-content blockquote {
+      border-left: 4px solid #667eea;
+      padding-left: 1rem;
+      margin: 0.75rem 0;
+      color: #666;
+    }
+    .message.user .message-content blockquote {
+      border-left-color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.9);
+    }
+    .message-content a {
+      color: #667eea;
+      text-decoration: underline;
+    }
+    .message.user .message-content a {
+      color: white;
+    }
+    .message-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      display: block;
+    }
+    .message-content video {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      display: block;
+    }
+    .message-content code {
+      background: rgba(0,0,0,0.05);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    .message.user .message-content code {
+      background: rgba(0,0,0,0.2);
+    }
+    .message-content pre {
+      position: relative;
+      background: #1e1e1e;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+    }
+    .message-content pre code {
+      background: none;
+      padding: 0;
+      color: #d4d4d4;
+      font-size: 0.9rem;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .copy-btn.copied {
+      background: #4caf50;
+      border-color: #4caf50;
+    }
+    .input-container {
+      padding: 1.5rem;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+    }
+    .input-wrapper {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .input-wrapper textarea {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: none;
+      transition: border-color 0.2s;
+    }
+    .input-wrapper textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .send-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .send-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .settings-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .settings-dialog {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #333;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-group small {
+      color: #999;
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      font-weight: 500;
+      margin-left: 0.5rem;
+      transition: transform 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .error {
+      background: #fee;
+      color: #c33;
+      padding: 1rem;
+      margin: 0 1.5rem;
+      border-radius: 8px;
+      border-left: 4px solid #c33;
+    }
+    .success {
+      background: #efe;
+      color: #3c3;
+      padding: 1rem;
+      margin: 0 1.5rem;
+      border-radius: 8px;
+      border-left: 4px solid #3c3;
+    }
+    .hidden { display: none; }
+    .typing-indicator {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.5rem 0;
+    }
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #999;
+      animation: typing 1.4s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+      30% { transform: translateY(-10px); opacity: 1; }
+    }
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #999;
+    }
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Mobile menu toggle */
+    .menu-toggle {
+      display: none;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 1.25rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* Tablet and below - hide sidebar by default, make it overlay */
+    @media (max-width: 840px) {
+      .menu-toggle {
+        display: block;
+      }
+
+      .app-container {
+        position: relative;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 99;
+      }
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      .header-controls {
+        gap: 0.5rem;
+      }
+
+      .model-select {
+        max-width: 200px;
+      }
+
+      .token-counter {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+      }
+
+      .token-counter-detail {
+        display: none;
+      }
+    }
+
+    /* Mobile phones - Galaxy Fold cover screen and similar */
+    @media (max-width: 600px) {
+      .header {
+        padding: 0.75rem 1rem;
+      }
+
+      .header h1 {
+        font-size: 1rem;
+      }
+
+      .header-controls {
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .model-select {
+        max-width: 140px;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.5rem;
+      }
+
+      .language-select {
+        max-width: 70px;
+      }
+
+      .token-counter {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.5rem;
+      }
+
+      .clear-btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+      }
+
+      .messages {
+        padding: 1rem;
+        gap: 1rem;
+      }
+
+      .message {
+        max-width: 95%;
+      }
+
+      .message-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+      }
+
+      .message-content {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+      }
+
+      .input-container {
+        padding: 1rem;
+      }
+
+      .input-wrapper {
+        gap: 0.5rem;
+      }
+
+      .input-wrapper textarea {
+        font-size: 0.95rem;
+        padding: 0.65rem 0.85rem;
+      }
+
+      .send-btn {
+        padding: 0.65rem 1rem;
+        font-size: 0.95rem;
+      }
+
+      .settings-dialog {
+        padding: 1.5rem;
+        width: 95%;
+      }
+
+      .sidebar {
+        width: 280px;
+        left: -300px;
+      }
+
+      .conversation-item {
+        padding: 0.6rem;
+      }
+
+      .conversation-title {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Very narrow screens - Galaxy Fold folded position */
+    @media (max-width: 380px) {
+      .header h1 {
+        font-size: 0.9rem;
+      }
+
+      .model-select {
+        max-width: 100px;
+        font-size: 0.75rem;
+      }
+
+      .message {
+        max-width: 100%;
+        gap: 0.5rem;
+      }
+
+      .message-avatar {
+        width: 28px;
+        height: 28px;
+      }
+
+      .input-wrapper textarea {
+        font-size: 0.9rem;
+      }
+
+      .send-btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>💬 Conversations</h2>
+        <button class="new-chat-btn" onclick="app.newConversation()">+ New Chat</button>
+      </div>
+      <div class="conversations-list" id="conversationsList"></div>
+    </div>
+    <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
+    <div class="chat-container">
+      <div class="header">
+        <button class="menu-toggle" onclick="app.toggleSidebar()">☰</button>
+        <h1 id="chatTitle" onclick="app.renameConversation()">New Chat</h1>
+        <div class="header-controls">
+          <div class="token-counter" id="tokenCounter">
+            <div>🎯 Tokens: 0</div>
+            <div class="token-counter-detail">Cost: $0.00</div>
+          </div>
+          <select class="model-select language-select" id="languageSelect" onchange="app.changeLanguage()">
+            <option value="en">🇬🇧 EN</option>
+            <option value="cs">🇨🇿 CS</option>
+            <option value="fr">🇫🇷 FR</option>
+            <option value="de">🇩🇪 DE</option>
+            <option value="uk">🇺🇦 UA</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
+          <div id="localModelSwitcher" style="display: none; gap: 5px;">
+            <button class="model-switch-btn" onclick="app.switchLocalModel('qwen2.5:7b')" data-model="qwen2.5:7b">🧠 Qwen</button>
+            <button class="model-switch-btn" onclick="app.switchLocalModel('dolphin-mistral:7b')" data-model="dolphin-mistral:7b">🐬 Dolphin</button>
+          </div>
+          <select class="model-select" id="modelSelect">
+            <optgroup label="🎁 Free Models">
+              <option value="xiaomi/mimo-v2-flash:free">MiMo V2 Flash (Free)</option>
+              <option value="google/gemma-2-9b-it:free">Gemma 2 9B (Free)</option>
+              <option value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B (Free)</option>
+              <option value="microsoft/phi-3-mini-128k-instruct:free">Phi-3 Mini (Free)</option>
+              <option value="qwen/qwen-2-7b-instruct:free">Qwen 2 7B (Free)</option>
+            </optgroup>
+            <optgroup label="🌟 Frontier (Open Source)">
+              <option value="deepseek/deepseek-chat">DeepSeek V3 (Best Value)</option>
+              <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
+              <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+              <option value="meta-llama/llama-3.1-405b-instruct">Llama 3.1 405B</option>
+              <option value="cohere/command-r-plus">Command R+ (128k)</option>
+            </optgroup>
+            <optgroup label="🚀 GPT Models">
+              <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+              <option value="openai/gpt-4">GPT-4</option>
+              <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            </optgroup>
+            <optgroup label="🧠 Claude Models">
+              <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+              <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
+              <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
+              <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+            </optgroup>
+            <optgroup label="💎 Gemini Models">
+              <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
+              <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
+              <option value="google/gemini-pro">Gemini Pro</option>
+            </optgroup>
+            <optgroup label="🦙 Open Source">
+              <option value="meta-llama/llama-3-70b-instruct">Llama 3 70B</option>
+              <option value="mistralai/mistral-large">Mistral Large</option>
+              <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
+              <option value="microsoft/wizardlm-2-8x22b">WizardLM 2 8x22B</option>
+            </optgroup>
+            <optgroup label="🎨 Image Generation">
+              <option value="black-forest-labs/flux.2-klein-4b">Flux.2 Klein 4B (OpenRouter)</option>
+              <option value="fal-ai/z-image/turbo">Z-Image Turbo (fal.ai - Fastest)</option>
+            </optgroup>
+            <optgroup label="🎬 Video Generation">
+              <option value="fal-ai/kling-video/v2.6/pro/text-to-video">Kling 2.6 Pro (5s video)</option>
+            </optgroup>
+          </select>
+          <button class="clear-btn" onclick="app.exportChat()">📥 Export</button>
+          <button class="clear-btn" onclick="app.showSettings()">⚙️</button>
+          <button class="clear-btn" onclick="app.clearChat()">🗑️</button>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div id="notification" class="hidden"></div>
+      <div class="input-container">
+        <div class="input-wrapper">
+          <textarea id="input" placeholder="Type your message... (Enter to send, Shift+Enter for new line)" rows="1"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="app.sendMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+    <div id="settingsOverlay" class="settings-overlay hidden" onclick="if(event.target === this) app.hideSettings()">
+      <div class="settings-dialog">
+        <h2>⚙️ Settings</h2>
+        <div class="form-group">
+          <label>Endpoint Type</label>
+          <select id="endpointType" onchange="app.toggleEndpointFields()">
+            <option value="openrouter">OpenRouter (100+ models)</option>
+            <option value="custom">Custom Endpoint (RunPod/Ollama/vLLM/etc)</option>
+          </select>
+          <small>Choose OpenRouter for easy access or custom for self-hosted models.</small>
+        </div>
+        <div id="openrouterFields">
+          <div class="form-group">
+            <label>OpenRouter API Key</label>
+            <input type="password" id="apiKeyInput" placeholder="sk-or-..." />
+            <small>One key for 100+ models. <a href="https://openrouter.ai/keys" target="_blank">Get one here</a></small>
+          </div>
+          <div class="form-group">
+            <label>fal.ai API Key (Optional - for Z-Image Turbo)</label>
+            <input type="password" id="falApiKeyInput" placeholder="FAL_KEY..." />
+            <small>Only needed for fal.ai image models. <a href="https://fal.ai/dashboard/keys" target="_blank">Get one here</a></small>
+          </div>
+        </div>
+        <div id="customFields" class="hidden">
+          <div class="form-group">
+            <label>Custom Endpoint URL</label>
+            <input type="text" id="customEndpoint" placeholder="https://your-pod-id.runpod.net/v1" />
+            <small>Base URL for your RunPod/vLLM/Ollama endpoint (with /v1 suffix)</small>
+          </div>
+          <div class="form-group">
+            <label>API Key (Optional)</label>
+            <input type="password" id="customApiKey" placeholder="Leave empty if not required" />
+            <small>Some endpoints don't require authentication</small>
+          </div>
+          <div class="form-group">
+            <label>Model Name</label>
+            <input type="text" id="customModel" placeholder="meta-llama/Llama-3-70b-instruct" />
+            <small>Model identifier (check your endpoint's docs)</small>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>System Prompt (Optional)</label>
+          <textarea id="systemPromptInput" placeholder="You are a helpful assistant..."></textarea>
+          <small>Set AI behavior and personality.</small>
+        </div>
+        <div>
+          <button class="btn btn-secondary" onclick="app.hideSettings()">Cancel</button>
+          <button class="btn btn-primary" onclick="app.saveSettings()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js"></script>
+  <script>
+    marked.setOptions({ breaks: true, gfm: true });
+
+    const app = {
+      // Model pricing (per million tokens)
+      pricing: {
+        // Free models
+        'xiaomi/mimo-v2-flash:free': { input: 0, output: 0 },
+        'google/gemma-2-9b-it:free': { input: 0, output: 0 },
+        'meta-llama/llama-3.1-8b-instruct:free': { input: 0, output: 0 },
+        'microsoft/phi-3-mini-128k-instruct:free': { input: 0, output: 0 },
+        'qwen/qwen-2-7b-instruct:free': { input: 0, output: 0 },
+        // Frontier models (open source)
+        'deepseek/deepseek-chat': { input: 0.27, output: 1.10 },
+        'qwen/qwen-2.5-72b-instruct': { input: 0.35, output: 0.70 },
+        'meta-llama/llama-3.3-70b-instruct': { input: 0.35, output: 0.40 },
+        'meta-llama/llama-3.1-405b-instruct': { input: 2.70, output: 2.70 },
+        'cohere/command-r-plus': { input: 3, output: 15 },
+        // Paid models
+        'openai/gpt-4-turbo': { input: 10, output: 30 },
+        'openai/gpt-4': { input: 30, output: 60 },
+        'openai/gpt-3.5-turbo': { input: 0.5, output: 1.5 },
+        'anthropic/claude-3.5-sonnet': { input: 3, output: 15 },
+        'anthropic/claude-3-opus': { input: 15, output: 75 },
+        'anthropic/claude-3-sonnet': { input: 3, output: 15 },
+        'anthropic/claude-3-haiku': { input: 0.25, output: 1.25 },
+        'google/gemini-pro-1.5': { input: 3.5, output: 10.5 },
+        'google/gemini-flash-1.5': { input: 0.35, output: 1.05 },
+        'google/gemini-pro': { input: 0.5, output: 1.5 },
+        'meta-llama/llama-3-70b-instruct': { input: 0.7, output: 0.8 },
+        'mistralai/mistral-large': { input: 4, output: 12 },
+        'mistralai/mixtral-8x7b-instruct': { input: 0.5, output: 0.5 },
+        'microsoft/wizardlm-2-8x22b': { input: 1.0, output: 1.0 },
+        // Image generation (cost per image, not per token)
+        'black-forest-labs/flux.2-klein-4b': { input: 0.014, output: 0 },
+        'fal-ai/z-image/turbo': { input: 0.005, output: 0 },
+        // Video generation (cost per video)
+        'fal-ai/kling-video/v2.6/pro/text-to-video': { input: 0.70, output: 0 }
+      },
+
+      conversations: {},
+      currentConversationId: null,
+      apiKey: '',
+      falApiKey: '',
+      systemPrompt: '',
+      model: 'anthropic/claude-3.5-sonnet',
+      endpointType: 'openrouter',
+      customEndpoint: '',
+      customApiKey: '',
+      customModel: '',
+      isLoading: false,
+      editingMessageIndex: null,
+      language: 'en',
+      renderedMessageCount: 0,
+      streamingElement: null,
+      streamThrottleTimeout: null,
+      pendingStreamUpdate: false,
+
+      init() {
+        const saved = localStorage.getItem('conversations');
+        if (saved) this.conversations = JSON.parse(saved);
+
+        // Clean up any empty assistant messages
+        Object.values(this.conversations).forEach(conv => {
+          conv.messages = conv.messages.filter(m =>
+            m.role !== 'assistant' || m.content.trim()
+          );
+        });
+
+        this.apiKey = localStorage.getItem('openrouter_api_key') || '';
+        this.falApiKey = localStorage.getItem('fal_api_key') || '';
+        this.systemPrompt = localStorage.getItem('system_prompt') || '';
+        this.model = localStorage.getItem('current_model') || 'anthropic/claude-3.5-sonnet';
+        this.endpointType = localStorage.getItem('endpoint_type') || 'openrouter';
+        this.customEndpoint = localStorage.getItem('custom_endpoint') || '';
+        this.customApiKey = localStorage.getItem('custom_api_key') || '';
+        this.customModel = localStorage.getItem('custom_model') || '';
+        this.language = localStorage.getItem('language') || 'en';
+
+        const conversationIds = Object.keys(this.conversations);
+        if (conversationIds.length === 0) {
+          this.newConversation();
+        } else {
+          const lastConv = localStorage.getItem('last_conversation');
+          this.currentConversationId = lastConv && this.conversations[lastConv]
+            ? lastConv : conversationIds[0];
+        }
+
+        // Show settings if no endpoint is configured
+        const hasOpenRouter = this.apiKey;
+        const hasCustom = this.customEndpoint && this.customModel;
+        if (!hasOpenRouter && !hasCustom) {
+          this.showSettings();
+        }
+
+        this.renderConversationsList();
+        this.render(true); // Initial full render
+        this.updateTokenCounter();
+
+        document.getElementById('input').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.sendMessage();
+          }
+        });
+
+        document.getElementById('modelSelect').addEventListener('change', (e) => {
+          this.model = e.target.value;
+          localStorage.setItem('current_model', this.model);
+          this.updateTokenCounter();
+        });
+
+        document.getElementById('modelSelect').value = this.model;
+        document.getElementById('languageSelect').value = this.language;
+
+        // Update dropdown to show custom model if using custom endpoint
+        this.updateModelDropdown();
+
+        document.addEventListener('keydown', (e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            this.clearChat();
+          }
+          if (e.key === 'Escape') {
+            this.hideSettings();
+          }
+        });
+      },
+
+      estimateTokens(text) {
+        return Math.ceil(text.length / 4);
+      },
+
+      calculateCost(tokens, model) {
+        const pricing = this.pricing[model];
+        if (!pricing) return 0;
+        const cost = (tokens / 2) * (pricing.input / 1000000) + (tokens / 2) * (pricing.output / 1000000);
+        return cost;
+      },
+
+      updateTokenCounter() {
+        const conv = this.getCurrentConversation();
+        if (!conv) return;
+
+        let totalTokens = 0;
+        conv.messages.forEach(msg => {
+          totalTokens += this.estimateTokens(msg.content);
+        });
+
+        if (this.systemPrompt) {
+          totalTokens += this.estimateTokens(this.systemPrompt);
+        }
+
+        const cost = this.calculateCost(totalTokens, this.model);
+
+        const counter = document.getElementById('tokenCounter');
+        counter.innerHTML = `
+          <div>🎯 ${totalTokens.toLocaleString()} tokens</div>
+          <div class="token-counter-detail">≈ $${cost.toFixed(4)}</div>
+        `;
+      },
+
+      toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+      },
+
+      changeLanguage() {
+        this.language = document.getElementById('languageSelect').value;
+        localStorage.setItem('language', this.language);
+        const messages = {
+          en: 'Language changed to English',
+          cs: 'Jazyk změněn na češtinu',
+          fr: 'Langue changée en français',
+          de: 'Sprache auf Deutsch geändert',
+          uk: 'Мову змінено на українську',
+          ru: 'Язык изменён на русский'
+        };
+        this.showNotification(messages[this.language] || messages.en);
+      },
+
+      switchLocalModel(modelName) {
+        this.customModel = modelName;
+        localStorage.setItem('custom_model', modelName);
+        this.updateModelDropdown();
+
+        // Update active button state
+        document.querySelectorAll('.model-switch-btn').forEach(btn => {
+          if (btn.dataset.model === modelName) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+
+        const modelNames = {
+          'qwen2.5:7b': 'Qwen 2.5 7B',
+          'dolphin-mistral:7b': 'Dolphin-Mistral 7B'
+        };
+        this.showNotification(`Switched to ${modelNames[modelName] || modelName}`);
+      },
+
+      newConversation() {
+        const id = 'conv_' + Date.now();
+        this.conversations[id] = {
+          id,
+          title: 'New Chat',
+          messages: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        this.currentConversationId = id;
+        this.saveConversations();
+        this.renderConversationsList();
+        this.render(true); // Full re-render for new conversation
+        this.updateTokenCounter();
+      },
+
+      switchConversation(id) {
+        this.currentConversationId = id;
+        localStorage.setItem('last_conversation', id);
+        this.renderConversationsList();
+        this.render(true); // Full re-render when switching conversations
+        this.updateTokenCounter();
+      },
+
+      renameConversation() {
+        const conv = this.conversations[this.currentConversationId];
+        const newTitle = prompt('Rename conversation:', conv.title);
+        if (newTitle && newTitle.trim()) {
+          conv.title = newTitle.trim();
+          conv.updatedAt = Date.now();
+          this.saveConversations();
+          this.renderConversationsList();
+          document.getElementById('chatTitle').textContent = conv.title;
+        }
+      },
+
+      deleteConversation(id) {
+        if (!confirm('Delete this conversation?')) return;
+        delete this.conversations[id];
+        const conversationIds = Object.keys(this.conversations);
+        if (conversationIds.length === 0) {
+          this.newConversation();
+        } else if (this.currentConversationId === id) {
+          this.currentConversationId = conversationIds[0];
+        }
+        this.saveConversations();
+        this.renderConversationsList();
+        this.render(true); // Full re-render after deleting conversation
+        this.updateTokenCounter();
+      },
+
+      deleteMessage(index) {
+        if (!confirm('Delete this message?')) return;
+        const conv = this.getCurrentConversation();
+        conv.messages.splice(index, 1);
+        conv.updatedAt = Date.now();
+        this.saveConversations();
+        this.render(true); // Full re-render when deleting
+        this.updateTokenCounter();
+      },
+
+      startEditMessage(index) {
+        this.editingMessageIndex = index;
+        this.render(true); // Full re-render to show edit UI
+      },
+
+      cancelEdit() {
+        this.editingMessageIndex = null;
+        this.render(true); // Full re-render to hide edit UI
+      },
+
+      async saveEdit(index) {
+        const textarea = document.getElementById(`edit-textarea-${index}`);
+        const newContent = textarea.value.trim();
+        if (!newContent) return;
+
+        const conv = this.getCurrentConversation();
+        const msg = conv.messages[index];
+
+        if (msg.role === 'user') {
+          msg.content = newContent;
+          conv.messages = conv.messages.slice(0, index + 1);
+          conv.updatedAt = Date.now();
+          this.editingMessageIndex = null;
+          this.saveConversations();
+          this.render(true); // Full re-render after edit
+          this.updateTokenCounter();
+          await this.sendMessage(true);
+        }
+      },
+
+      async regenerateMessage(index) {
+        const conv = this.getCurrentConversation();
+        conv.messages = conv.messages.slice(0, index);
+        conv.updatedAt = Date.now();
+        this.saveConversations();
+        this.render(true); // Full re-render before regenerating
+        this.updateTokenCounter();
+        await this.sendMessage(true);
+      },
+
+      saveConversations() {
+        localStorage.setItem('conversations', JSON.stringify(this.conversations));
+      },
+
+      renderConversationsList() {
+        const container = document.getElementById('conversationsList');
+        container.innerHTML = '';
+        const sorted = Object.values(this.conversations)
+          .sort((a, b) => b.updatedAt - a.updatedAt);
+
+        sorted.forEach(conv => {
+          const div = document.createElement('div');
+          div.className = 'conversation-item' + (conv.id === this.currentConversationId ? ' active' : '');
+          div.onclick = () => this.switchConversation(conv.id);
+          const date = new Date(conv.updatedAt);
+          const dateStr = date.toLocaleDateString();
+          div.innerHTML = `
+            <div class="conversation-title">${this.escapeHtml(conv.title)}</div>
+            <div class="conversation-date">${dateStr}</div>
+            <button class="delete-conversation" onclick="event.stopPropagation(); app.deleteConversation('${conv.id}')">×</button>
+          `;
+          container.appendChild(div);
+        });
+      },
+
+      getCurrentConversation() {
+        return this.conversations[this.currentConversationId];
+      },
+
+      createMessageElement(msg, index) {
+        const div = document.createElement('div');
+        div.className = `message ${msg.role}`;
+        div.dataset.messageIndex = index;
+
+        const isEditing = this.editingMessageIndex === index;
+
+        let content;
+        if (isEditing) {
+          content = `
+            <div class="edit-area">
+              <textarea id="edit-textarea-${index}" class="edit-textarea">${this.escapeHtml(msg.content).replace(/<br>/g, '\n')}</textarea>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <button class="edit-btn" onclick="app.saveEdit(${index})">Save</button>
+                <button class="edit-btn edit-btn-cancel" onclick="app.cancelEdit()">Cancel</button>
+              </div>
+            </div>
+          `;
+        } else {
+          content = msg.role === 'user'
+            ? this.escapeHtml(msg.content)
+            : this.renderMarkdown(msg.content);
+        }
+
+        let actions = '';
+        if (!isEditing) {
+          if (msg.role === 'user') {
+            actions = `
+              <div class="message-actions">
+                <button class="message-action-btn" onclick="app.startEditMessage(${index})">✏️ Edit</button>
+                <button class="message-action-btn" onclick="app.deleteMessage(${index})">🗑️</button>
+              </div>
+            `;
+          } else {
+            actions = `
+              <div class="message-actions">
+                <button class="message-action-btn" onclick="app.regenerateMessage(${index})">🔄 Regenerate</button>
+                <button class="message-action-btn" onclick="app.deleteMessage(${index})">🗑️</button>
+              </div>
+            `;
+          }
+        }
+
+        div.innerHTML = `
+          ${actions}
+          <div class="message-avatar">${msg.role === 'user' ? '👤' : '🤖'}</div>
+          <div class="message-content">${content}</div>
+        `;
+
+        if (msg.role === 'assistant' && !isEditing) {
+          div.querySelectorAll('pre code').forEach((block) => {
+            const button = document.createElement('button');
+            button.className = 'copy-btn';
+            button.textContent = 'Copy';
+            button.onclick = () => this.copyCode(button, block);
+            block.parentElement.style.position = 'relative';
+            block.parentElement.appendChild(button);
+          });
+        }
+
+        return div;
+      },
+
+      scrollToBottom() {
+        const container = document.getElementById('messages');
+        container.scrollTop = container.scrollHeight;
+      },
+
+      renderMessages(fullRender = false) {
+        const conv = this.getCurrentConversation();
+        if (!conv) return;
+
+        const container = document.getElementById('messages');
+
+        // Full re-render (e.g., when switching conversations or editing)
+        if (fullRender) {
+          container.innerHTML = '';
+          this.renderedMessageCount = 0;
+          this.streamingElement = null;
+        }
+
+        if (conv.messages.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">💭</div>
+              <h3>Start a conversation</h3>
+              <p style="margin-top: 0.5rem;">Type a message below to begin chatting with AI</p>
+            </div>
+          `;
+          this.renderedMessageCount = 0;
+          return;
+        }
+
+        // Append-only: only render new messages
+        const messages = conv.messages.filter(m => m.role !== 'system' && (m.role !== 'assistant' || m.content.trim()));
+
+        for (let i = this.renderedMessageCount; i < messages.length; i++) {
+          const msgElement = this.createMessageElement(messages[i], i);
+          container.appendChild(msgElement);
+        }
+
+        this.renderedMessageCount = messages.length;
+        this.scrollToBottom();
+      },
+
+      updateStreamingMessage(content) {
+        const container = document.getElementById('messages');
+
+        if (!this.streamingElement) {
+          // Create dedicated streaming element
+          this.streamingElement = document.createElement('div');
+          this.streamingElement.className = 'message assistant';
+          this.streamingElement.id = 'streaming-message';
+          this.streamingElement.innerHTML = `
+            <div class="message-avatar">🤖</div>
+            <div class="message-content"></div>
+          `;
+          container.appendChild(this.streamingElement);
+        }
+
+        // Throttle updates to 50ms
+        if (!this.pendingStreamUpdate) {
+          this.pendingStreamUpdate = true;
+          clearTimeout(this.streamThrottleTimeout);
+
+          this.streamThrottleTimeout = setTimeout(() => {
+            const contentEl = this.streamingElement.querySelector('.message-content');
+            contentEl.innerHTML = this.renderMarkdown(content);
+
+            // Add copy buttons to code blocks
+            contentEl.querySelectorAll('pre code').forEach((block) => {
+              if (!block.parentElement.querySelector('.copy-btn')) {
+                const button = document.createElement('button');
+                button.className = 'copy-btn';
+                button.textContent = 'Copy';
+                button.onclick = () => this.copyCode(button, block);
+                block.parentElement.style.position = 'relative';
+                block.parentElement.appendChild(button);
+              }
+            });
+
+            this.scrollToBottom();
+            this.pendingStreamUpdate = false;
+          }, 50);
+        }
+      },
+
+      finalizeStreamingMessage() {
+        if (this.streamingElement) {
+          this.streamingElement.remove();
+          this.streamingElement = null;
+        }
+        clearTimeout(this.streamThrottleTimeout);
+        this.pendingStreamUpdate = false;
+      },
+
+      render(fullRender = false) {
+        const conv = this.getCurrentConversation();
+        if (!conv) return;
+
+        document.getElementById('chatTitle').textContent = conv.title;
+        this.renderMessages(fullRender);
+      },
+
+      renderMarkdown(text) {
+        const html = marked.parse(text);
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        temp.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightElement(block);
+        });
+        return temp.innerHTML;
+      },
+
+      escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML.replace(/\n/g, '<br>');
+      },
+
+      copyCode(button, codeBlock) {
+        const code = codeBlock.textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          button.textContent = 'Copied!';
+          button.classList.add('copied');
+          setTimeout(() => {
+            button.textContent = 'Copy';
+            button.classList.remove('copied');
+          }, 2000);
+        });
+      },
+
+      showNotification(msg, type = 'success') {
+        const el = document.getElementById('notification');
+        el.className = type;
+        el.textContent = msg;
+        const timeout = type === 'error' ? 8000 : 3000;
+        setTimeout(() => el.classList.add('hidden'), timeout);
+      },
+
+      updateModelDropdown() {
+        const modelSelect = document.getElementById('modelSelect');
+        const localSwitcher = document.getElementById('localModelSwitcher');
+
+        // Remove any existing custom option
+        const existingCustom = modelSelect.querySelector('#custom-model-option');
+        if (existingCustom) {
+          existingCustom.remove();
+        }
+
+        if (this.endpointType === 'custom' && this.customModel) {
+          // Show local model switcher
+          localSwitcher.style.display = 'flex';
+
+          // Update active button
+          document.querySelectorAll('.model-switch-btn').forEach(btn => {
+            if (btn.dataset.model === this.customModel) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          });
+
+          // Add custom model option at the top
+          const customOption = document.createElement('option');
+          customOption.id = 'custom-model-option';
+          customOption.value = this.customModel;
+          customOption.textContent = `🖥️ ${this.customModel} (Custom)`;
+          modelSelect.insertBefore(customOption, modelSelect.firstChild);
+
+          // Select the custom model
+          modelSelect.value = this.customModel;
+
+          // Disable the dropdown since other options won't work with custom endpoint
+          modelSelect.style.opacity = '0.7';
+        } else {
+          // Hide local model switcher
+          localSwitcher.style.display = 'none';
+
+          // Re-enable dropdown and select the OpenRouter model
+          modelSelect.style.opacity = '1';
+          modelSelect.value = this.model;
+        }
+      },
+
+      toggleEndpointFields() {
+        const endpointType = document.getElementById('endpointType').value;
+        const openrouterFields = document.getElementById('openrouterFields');
+        const customFields = document.getElementById('customFields');
+
+        if (endpointType === 'openrouter') {
+          openrouterFields.classList.remove('hidden');
+          customFields.classList.add('hidden');
+        } else {
+          openrouterFields.classList.add('hidden');
+          customFields.classList.remove('hidden');
+        }
+      },
+
+      showSettings() {
+        document.getElementById('endpointType').value = this.endpointType;
+        document.getElementById('apiKeyInput').value = this.apiKey;
+        document.getElementById('falApiKeyInput').value = this.falApiKey;
+        document.getElementById('customEndpoint').value = this.customEndpoint;
+        document.getElementById('customApiKey').value = this.customApiKey;
+        document.getElementById('customModel').value = this.customModel;
+        document.getElementById('systemPromptInput').value = this.systemPrompt;
+        this.toggleEndpointFields();
+        document.getElementById('settingsOverlay').classList.remove('hidden');
+      },
+
+      hideSettings() {
+        document.getElementById('settingsOverlay').classList.add('hidden');
+      },
+
+      saveSettings() {
+        this.endpointType = document.getElementById('endpointType').value;
+        this.systemPrompt = document.getElementById('systemPromptInput').value.trim();
+
+        if (this.endpointType === 'openrouter') {
+          const key = document.getElementById('apiKeyInput').value.trim();
+          if (!key) {
+            alert('Please enter an OpenRouter API key');
+            return;
+          }
+          this.apiKey = key;
+          localStorage.setItem('openrouter_api_key', key);
+
+          // Save fal.ai key (optional)
+          const falKey = document.getElementById('falApiKeyInput').value.trim();
+          this.falApiKey = falKey;
+          localStorage.setItem('fal_api_key', falKey);
+        } else {
+          this.customEndpoint = document.getElementById('customEndpoint').value.trim();
+          this.customApiKey = document.getElementById('customApiKey').value.trim();
+          this.customModel = document.getElementById('customModel').value.trim();
+
+          if (!this.customEndpoint) {
+            alert('Please enter a custom endpoint URL');
+            return;
+          }
+          if (!this.customModel) {
+            alert('Please enter a model name');
+            return;
+          }
+
+          localStorage.setItem('custom_endpoint', this.customEndpoint);
+          localStorage.setItem('custom_api_key', this.customApiKey);
+          localStorage.setItem('custom_model', this.customModel);
+        }
+
+        localStorage.setItem('endpoint_type', this.endpointType);
+        localStorage.setItem('system_prompt', this.systemPrompt);
+        this.hideSettings();
+        this.showNotification('Settings saved!');
+        this.updateTokenCounter();
+        this.updateModelDropdown();
+      },
+
+      clearChat() {
+        if (confirm('Clear all messages in this conversation?')) {
+          const conv = this.getCurrentConversation();
+          conv.messages = [];
+          conv.updatedAt = Date.now();
+          this.saveConversations();
+          this.renderConversationsList();
+          this.render(true); // Full re-render after clearing
+          this.updateTokenCounter();
+        }
+      },
+
+      exportChat() {
+        const conv = this.getCurrentConversation();
+        if (conv.messages.length === 0) {
+          alert('No messages to export');
+          return;
+        }
+        const choice = prompt('Export as:\n1. Markdown\n2. JSON\n3. Text\n\nEnter 1, 2, or 3:');
+        let content, filename, type;
+        switch(choice) {
+          case '1':
+            content = this.exportAsMarkdown(conv);
+            filename = 'chat-export.md';
+            type = 'text/markdown';
+            break;
+          case '2':
+            content = JSON.stringify(conv, null, 2);
+            filename = 'chat-export.json';
+            type = 'application/json';
+            break;
+          case '3':
+            content = this.exportAsText(conv);
+            filename = 'chat-export.txt';
+            type = 'text/plain';
+            break;
+          default:
+            return;
+        }
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showNotification('Chat exported!');
+      },
+
+      exportAsMarkdown(conv) {
+        let md = `# ${conv.title}\n\n`;
+        md += `**Date:** ${new Date(conv.updatedAt).toLocaleString()}\n`;
+        md += `**Model:** ${this.model}\n\n---\n\n`;
+        conv.messages.forEach(msg => {
+          if (msg.role === 'system') return;
+          const role = msg.role === 'user' ? '**You:**' : '**Assistant:**';
+          md += `${role}\n\n${msg.content}\n\n---\n\n`;
+        });
+        return md;
+      },
+
+      exportAsText(conv) {
+        let txt = `${conv.title}\n`;
+        txt += `Date: ${new Date(conv.updatedAt).toLocaleString()}\n`;
+        txt += `Model: ${this.model}\n\n${'='.repeat(50)}\n\n`;
+        conv.messages.forEach(msg => {
+          if (msg.role === 'system') return;
+          const role = msg.role === 'user' ? 'You' : 'Assistant';
+          txt += `${role}:\n${msg.content}\n\n${'-'.repeat(50)}\n\n`;
+        });
+        return txt;
+      },
+
+      async generateImage() {
+        const conv = this.getCurrentConversation();
+
+        try {
+          // Get the user's prompt (last message)
+          const userMessage = conv.messages[conv.messages.length - 1];
+          const prompt = userMessage.content;
+
+          // OpenRouter uses the same chat completions endpoint with modalities parameter
+          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.apiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': window.location.href,
+              'X-Title': 'Chat MVP'
+            },
+            body: JSON.stringify({
+              model: this.model,
+              messages: [{ role: 'user', content: prompt }],
+              modalities: ["image", "text"]
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorMsg = 'Image generation failed';
+            try {
+              const error = JSON.parse(errorText);
+              errorMsg = error.error?.message || error.message || errorText;
+            } catch {
+              errorMsg = errorText || 'Unknown error';
+            }
+            throw new Error(errorMsg);
+          }
+
+          const data = await response.json();
+
+          // Images come back in the assistant message
+          const assistantMessage = data.choices?.[0]?.message;
+          const images = assistantMessage?.images;
+          const textContent = assistantMessage?.content || '';
+
+          if (!images || images.length === 0) {
+            throw new Error('No images in response');
+          }
+
+          // Build content with images (images are objects with image_url.url structure)
+          let content = '';
+          images.forEach((imageData, index) => {
+            // Extract the actual data URL from the nested structure
+            const imageUrl = imageData.image_url?.url || imageData.url || imageData;
+            content += `![Generated Image ${index + 1}](${imageUrl})\n\n`;
+          });
+
+          if (textContent) {
+            content += textContent + '\n\n';
+          }
+
+          content += `*Image generated using ${this.model}*`;
+
+          // Add assistant message with images
+          const assistantMsg = {
+            role: 'assistant',
+            content: content
+          };
+          conv.messages.push(assistantMsg);
+
+          conv.updatedAt = Date.now();
+          this.saveConversations();
+          this.renderConversationsList();
+          this.renderMessages();
+          this.updateTokenCounter();
+
+        } catch (err) {
+          this.showNotification(err.message, 'error');
+          // Remove the empty assistant message that was added
+          if (conv.messages.length > 0 && conv.messages[conv.messages.length - 1].role === 'assistant') {
+            conv.messages.pop();
+          }
+          this.saveConversations();
+        } finally {
+          this.isLoading = false;
+          document.getElementById('sendBtn').disabled = false;
+        }
+      },
+
+      async generateImageFal() {
+        const conv = this.getCurrentConversation();
+
+        try {
+          // Check if fal.ai API key is set
+          if (!this.falApiKey) {
+            alert('Please set your fal.ai API key in settings to use Z-Image Turbo');
+            this.showSettings();
+            throw new Error('fal.ai API key required');
+          }
+
+          // Get the user's prompt (last message)
+          const userMessage = conv.messages[conv.messages.length - 1];
+          const prompt = userMessage.content;
+
+          // fal.ai REST API endpoint
+          const response = await fetch('https://fal.run/fal-ai/z-image/turbo', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Key ${this.falApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              prompt: prompt,
+              num_images: 1
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorMsg = 'fal.ai image generation failed';
+            try {
+              const error = JSON.parse(errorText);
+              errorMsg = error.error?.message || error.message || errorText;
+            } catch {
+              errorMsg = errorText || 'Unknown error';
+            }
+            throw new Error(errorMsg);
+          }
+
+          const data = await response.json();
+
+          // fal.ai returns images array with url, width, height
+          const images = data.images;
+
+          if (!images || images.length === 0) {
+            throw new Error('No images in response');
+          }
+
+          // Build content with images
+          let content = '';
+          images.forEach((imageData, index) => {
+            content += `![Generated Image ${index + 1}](${imageData.url})\n\n`;
+          });
+
+          content += `*Image generated using ${this.model} (${images[0].width}x${images[0].height})*`;
+
+          // Add assistant message with images
+          const assistantMsg = {
+            role: 'assistant',
+            content: content
+          };
+          conv.messages.push(assistantMsg);
+
+          conv.updatedAt = Date.now();
+          this.saveConversations();
+          this.renderConversationsList();
+          this.renderMessages();
+          this.updateTokenCounter();
+
+        } catch (err) {
+          this.showNotification(err.message, 'error');
+          // Remove the empty assistant message that was added
+          if (conv.messages.length > 0 && conv.messages[conv.messages.length - 1].role === 'assistant') {
+            conv.messages.pop();
+          }
+          this.saveConversations();
+        } finally {
+          this.isLoading = false;
+          document.getElementById('sendBtn').disabled = false;
+        }
+      },
+
+      async generateVideoFal() {
+        const conv = this.getCurrentConversation();
+
+        try {
+          // Check if fal.ai API key is set
+          if (!this.falApiKey) {
+            alert('Please set your fal.ai API key in settings to use Kling video generation');
+            this.showSettings();
+            throw new Error('fal.ai API key required');
+          }
+
+          // Get the user's prompt (last message)
+          const userMessage = conv.messages[conv.messages.length - 1];
+          const prompt = userMessage.content;
+
+          // Submit request to queue
+          this.showNotification('Submitting video generation request...', 'success');
+
+          const submitResponse = await fetch(`https://queue.fal.run/${this.model}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Key ${this.falApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              prompt: prompt,
+              duration: "5",
+              aspect_ratio: "16:9",
+              generate_audio: true
+            })
+          });
+
+          if (!submitResponse.ok) {
+            const errorText = await submitResponse.text();
+            throw new Error(`Failed to submit video request: ${errorText}`);
+          }
+
+          const submitData = await submitResponse.json();
+          const requestId = submitData.request_id;
+          const statusUrl = submitData.status_url;
+
+          this.showNotification('Video generation in progress... This may take 30-60 seconds.', 'success');
+
+          // Poll for completion
+          let attempts = 0;
+          const maxAttempts = 120; // 2 minutes max (1 second intervals)
+
+          while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+
+            const statusResponse = await fetch(statusUrl, {
+              headers: {
+                'Authorization': `Key ${this.falApiKey}`
+              }
+            });
+
+            if (!statusResponse.ok) {
+              throw new Error('Failed to check video generation status');
+            }
+
+            const statusData = await statusResponse.json();
+
+            if (statusData.status === 'COMPLETED') {
+              // Get the result
+              const resultResponse = await fetch(submitData.response_url, {
+                headers: {
+                  'Authorization': `Key ${this.falApiKey}`
+                }
+              });
+
+              if (!resultResponse.ok) {
+                throw new Error('Failed to get video result');
+              }
+
+              const resultData = await resultResponse.json();
+              const videoUrl = resultData.video?.url;
+
+              if (!videoUrl) {
+                throw new Error('No video URL in response');
+              }
+
+              // Build content with video
+              let content = `<video controls>\n  <source src="${videoUrl}" type="video/mp4">\n  Your browser does not support video playback.\n</video>\n\n`;
+              content += `*5-second video generated using Kling 2.6 Pro with audio*\n\n`;
+              content += `[Download Video](${videoUrl})`;
+
+              // Add assistant message with video
+              const assistantMsg = {
+                role: 'assistant',
+                content: content
+              };
+              conv.messages.push(assistantMsg);
+
+              conv.updatedAt = Date.now();
+              this.saveConversations();
+              this.renderConversationsList();
+              this.renderMessages();
+              this.updateTokenCounter();
+              this.showNotification('Video generated successfully!', 'success');
+              break;
+            } else if (statusData.status === 'FAILED') {
+              throw new Error('Video generation failed');
+            } else {
+              // Still in progress
+              const queuePos = statusData.queue_position !== undefined ? ` (queue position: ${statusData.queue_position})` : '';
+              this.showNotification(`Generating video${queuePos}...`, 'success');
+            }
+
+            attempts++;
+          }
+
+          if (attempts >= maxAttempts) {
+            throw new Error('Video generation timed out');
+          }
+
+        } catch (err) {
+          this.showNotification(err.message, 'error');
+          // Remove the empty assistant message that was added
+          if (conv.messages.length > 0 && conv.messages[conv.messages.length - 1].role === 'assistant') {
+            conv.messages.pop();
+          }
+          this.saveConversations();
+        } finally {
+          this.isLoading = false;
+          document.getElementById('sendBtn').disabled = false;
+        }
+      },
+
+      async sendMessage(isRegeneration = false) {
+        if (this.isLoading) return;
+
+        // Validate settings based on endpoint type
+        if (this.endpointType === 'openrouter' && !this.apiKey) {
+          alert('Please set your OpenRouter API key in settings');
+          this.showSettings();
+          return;
+        } else if (this.endpointType === 'custom' && !this.customEndpoint) {
+          alert('Please configure your custom endpoint in settings');
+          this.showSettings();
+          return;
+        }
+
+        const input = document.getElementById('input');
+        let text;
+
+        if (isRegeneration) {
+          text = null;
+        } else {
+          text = input.value.trim();
+          if (!text) return;
+        }
+
+        const conv = this.getCurrentConversation();
+
+        if (!isRegeneration) {
+          if (conv.messages.length === 0) {
+            conv.title = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+          }
+          conv.messages.push({ role: 'user', content: text });
+          conv.updatedAt = Date.now();
+          input.value = '';
+        }
+
+        this.saveConversations();
+        this.renderConversationsList();
+        this.renderMessages(); // Append new user message
+        this.updateTokenCounter();
+
+        this.isLoading = true;
+        document.getElementById('sendBtn').disabled = true;
+
+        // Check if using image/video generation model
+        const isFluxModel = this.model.startsWith('black-forest-labs/flux');
+        const isFalImageModel = this.model === 'fal-ai/z-image/turbo';
+        const isFalVideoModel = this.model.startsWith('fal-ai/kling-video');
+
+        if (isFluxModel && this.endpointType === 'openrouter') {
+          return this.generateImage();
+        }
+
+        if (isFalImageModel) {
+          return this.generateImageFal();
+        }
+
+        if (isFalVideoModel) {
+          return this.generateVideoFal();
+        }
+
+        try {
+          const apiMessages = [];
+
+          // Build system prompt with language instruction
+          let systemPrompt = this.systemPrompt || '';
+          if (this.language !== 'en') {
+            const langInstructions = {
+              cs: 'You must respond in Czech language (čeština). Always write your responses in Czech.',
+              fr: 'You must respond in French language (français). Always write your responses in French.',
+              de: 'You must respond in German language (Deutsch). Always write your responses in German.',
+              uk: 'You must respond in Ukrainian language (українська). Always write your responses in Ukrainian.',
+              ru: 'You must respond in Russian language (русский). Always write your responses in Russian.'
+            };
+            const langInstruction = langInstructions[this.language];
+            if (langInstruction) {
+              systemPrompt = systemPrompt ? `${systemPrompt}\n\n${langInstruction}` : langInstruction;
+            }
+          }
+
+          if (systemPrompt) {
+            apiMessages.push({ role: 'system', content: systemPrompt });
+          }
+          apiMessages.push(...conv.messages.filter(m => m.role !== 'system'));
+
+          // Build endpoint URL and headers based on endpoint type
+          let endpoint, headers, model;
+
+          if (this.endpointType === 'openrouter') {
+            endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+            headers = {
+              'Authorization': `Bearer ${this.apiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': window.location.href,
+              'X-Title': 'Chat MVP'
+            };
+            model = this.model;
+          } else {
+            // Custom endpoint (RunPod/Ollama/vLLM/etc)
+            endpoint = `${this.customEndpoint}/chat/completions`;
+            headers = {
+              'Content-Type': 'application/json'
+            };
+            // Only add Authorization header if API key is provided
+            if (this.customApiKey) {
+              headers['Authorization'] = `Bearer ${this.customApiKey}`;
+            }
+            model = this.customModel;
+          }
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+              model: model,
+              messages: apiMessages,
+              stream: true
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorMsg = 'API request failed';
+            try {
+              const error = JSON.parse(errorText);
+              errorMsg = error.error?.message || error.message || errorText;
+            } catch {
+              errorMsg = errorText || 'Unknown error';
+            }
+            throw new Error(errorMsg);
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let assistantMsg = { role: 'assistant', content: '' };
+          conv.messages.push(assistantMsg);
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(l => l.trim());
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') continue;
+
+                try {
+                  const json = JSON.parse(data);
+                  const delta = json.choices?.[0]?.delta?.content;
+                  if (delta) {
+                    assistantMsg.content += delta;
+                    this.updateStreamingMessage(assistantMsg.content);
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+
+          // Finalize streaming and render the complete message
+          this.finalizeStreamingMessage();
+          this.renderMessages();
+
+          conv.updatedAt = Date.now();
+          this.saveConversations();
+          this.renderConversationsList();
+          this.updateTokenCounter();
+
+        } catch (err) {
+          this.showNotification(err.message, 'error');
+          // Remove the empty assistant message that was added
+          if (conv.messages.length > 0 && conv.messages[conv.messages.length - 1].role === 'assistant') {
+            conv.messages.pop();
+          }
+          this.saveConversations();
+        } finally {
+          this.isLoading = false;
+          document.getElementById('sendBtn').disabled = false;
+          this.finalizeStreamingMessage(); // Clean up streaming element
+        }
+      }
+    };
+
+    // Fix for mobile viewport height (address bar issue)
+    function setVH() {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+
+    document.addEventListener('DOMContentLoaded', () => app.init());
+  </script>
+</body>
+</html>
+

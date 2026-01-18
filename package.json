@@ -1,0 +1,55 @@
+{
+  "name": "melchat",
+  "version": "0.0.1",
+  "description": "100+ AI models in one lightweight chat interface. GPT-4, Claude, Gemini, Llama, Qwen, and more - all in a single 69KB file.",
+  "main": "dist/index.html",
+  "bin": {
+    "melchat": "./bin/melchat.js"
+  },
+  "scripts": {
+    "start": "node bin/melchat.js",
+    "test": "echo \"Tests coming soon\" && exit 0"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "llm",
+    "gpt",
+    "gpt-4",
+    "claude",
+    "gemini",
+    "llama",
+    "qwen",
+    "openrouter",
+    "openai",
+    "anthropic",
+    "chatbot",
+    "ai-chat",
+    "local-llm",
+    "ollama",
+    "deepseek",
+    "image-generation",
+    "flux",
+    "streaming",
+    "cli"
+  ],
+  "author": "Melvin Carvalho",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/melvincarvalho/melchat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/melvincarvalho/melchat/issues"
+  },
+  "homepage": "https://github.com/melvincarvalho/melchat#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ]
+}
