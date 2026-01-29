@@ -5,7 +5,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat - AI Assistant</title>
+  <title>MelChat - 100+ AI Models</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github-dark.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -433,6 +434,38 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+    .stop-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .stop-btn:hover {
+      transform: translateY(-2px);
+    }
+    .copy-msg-btn {
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+    .copy-msg-btn:hover {
+      background: rgba(102, 126, 234, 0.2);
+    }
+    .copy-msg-btn.copied {
+      background: #4caf50;
+      color: white;
+      border-color: #4caf50;
+    }
     .settings-overlay {
       position: fixed;
       top: 0;
@@ -833,6 +866,7 @@
         <div class="input-wrapper">
           <textarea id="input" placeholder="Type your message... (Enter to send, Shift+Enter for new line)" rows="1"></textarea>
           <button class="send-btn" id="sendBtn" onclick="app.sendMessage()">Send</button>
+          <button class="stop-btn hidden" id="stopBtn" onclick="app.stopGeneration()">Stop</button>
         </div>
       </div>
     </div>
@@ -947,6 +981,7 @@
       streamingElement: null,
       streamThrottleTimeout: null,
       pendingStreamUpdate: false,
+      abortController: null,
 
       init() {
         const saved = localStorage.getItem('conversations');
@@ -989,11 +1024,18 @@
         this.render(true); // Initial full render
         this.updateTokenCounter();
 
-        document.getElementById('input').addEventListener('keypress', (e) => {
+        const inputEl = document.getElementById('input');
+        inputEl.addEventListener('keypress', (e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             this.sendMessage();
           }
+        });
+
+        // Auto-resize textarea
+        inputEl.addEventListener('input', () => {
+          inputEl.style.height = 'auto';
+          inputEl.style.height = Math.min(inputEl.scrollHeight, 150) + 'px';
         });
 
         document.getElementById('modelSelect').addEventListener('change', (e) => {
@@ -1260,6 +1302,7 @@
           } else {
             actions = `
               <div class="message-actions">
+                <button class="message-action-btn" onclick="app.copyMessage(app.getCurrentConversation().messages[${index}].content)">📋 Copy</button>
                 <button class="message-action-btn" onclick="app.regenerateMessage(${index})">🔄 Regenerate</button>
                 <button class="message-action-btn" onclick="app.deleteMessage(${index})">🗑️</button>
               </div>
@@ -1378,6 +1421,25 @@
         }
         clearTimeout(this.streamThrottleTimeout);
         this.pendingStreamUpdate = false;
+      },
+
+      stopGeneration() {
+        if (this.abortController) {
+          this.abortController.abort();
+          this.abortController = null;
+          this.showNotification('Generation stopped');
+        }
+      },
+
+      showStopButton(show) {
+        document.getElementById('sendBtn').classList.toggle('hidden', show);
+        document.getElementById('stopBtn').classList.toggle('hidden', !show);
+      },
+
+      copyMessage(content) {
+        navigator.clipboard.writeText(content).then(() => {
+          this.showNotification('Message copied!');
+        });
       },
 
       render(fullRender = false) {
@@ -1699,7 +1761,7 @@
           this.saveConversations();
         } finally {
           this.isLoading = false;
-          document.getElementById('sendBtn').disabled = false;
+          this.showStopButton(false);
         }
       },
 
@@ -1782,7 +1844,7 @@
           this.saveConversations();
         } finally {
           this.isLoading = false;
-          document.getElementById('sendBtn').disabled = false;
+          this.showStopButton(false);
         }
       },
 
@@ -1910,7 +1972,7 @@
           this.saveConversations();
         } finally {
           this.isLoading = false;
-          document.getElementById('sendBtn').disabled = false;
+          this.showStopButton(false);
         }
       },
 
@@ -1955,7 +2017,7 @@
         this.updateTokenCounter();
 
         this.isLoading = true;
-        document.getElementById('sendBtn').disabled = true;
+        this.showStopButton(true);
 
         // Check if using image/video generation model
         const isFluxModel = this.model.startsWith('black-forest-labs/flux');
@@ -2023,6 +2085,12 @@
             model = this.customModel;
           }
 
+          // Show thinking indicator
+          this.updateStreamingMessage('*Thinking...*');
+
+          // Create abort controller for stop button
+          this.abortController = new AbortController();
+
           const response = await fetch(endpoint, {
             method: 'POST',
             headers: headers,
@@ -2030,7 +2098,8 @@
               model: model,
               messages: apiMessages,
               stream: true
-            })
+            }),
+            signal: this.abortController.signal
           });
 
           if (!response.ok) {
@@ -2092,8 +2161,9 @@
           this.saveConversations();
         } finally {
           this.isLoading = false;
-          document.getElementById('sendBtn').disabled = false;
-          this.finalizeStreamingMessage(); // Clean up streaming element
+          this.abortController = null;
+          this.showStopButton(false);
+          this.finalizeStreamingMessage();
         }
       }
     };
