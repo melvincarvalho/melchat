@@ -34,7 +34,7 @@
     "cli"
   ],
   "author": "Melvin Carvalho",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/melvincarvalho/melchat.git"
