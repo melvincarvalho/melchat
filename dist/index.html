@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<!-- Version: 1.6 - Local model quick switcher (Qwen/Dolphin) -->
+<!-- Version: 1.7 - Extract CONFIG for single source of truth -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -807,53 +807,10 @@
             <option value="ru">🇷🇺 RU</option>
           </select>
           <div id="localModelSwitcher" style="display: none; gap: 5px;">
-            <button class="model-switch-btn" onclick="app.switchLocalModel('qwen2.5:7b')" data-model="qwen2.5:7b">🧠 Qwen</button>
-            <button class="model-switch-btn" onclick="app.switchLocalModel('dolphin-mistral:7b')" data-model="dolphin-mistral:7b">🐬 Dolphin</button>
+            <!-- Populated dynamically from CONFIG.localModels -->
           </div>
           <select class="model-select" id="modelSelect">
-            <optgroup label="🎁 Free Models">
-              <option value="xiaomi/mimo-v2-flash:free">MiMo V2 Flash (Free)</option>
-              <option value="google/gemma-2-9b-it:free">Gemma 2 9B (Free)</option>
-              <option value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B (Free)</option>
-              <option value="microsoft/phi-3-mini-128k-instruct:free">Phi-3 Mini (Free)</option>
-              <option value="qwen/qwen-2-7b-instruct:free">Qwen 2 7B (Free)</option>
-            </optgroup>
-            <optgroup label="🌟 Frontier (Open Source)">
-              <option value="deepseek/deepseek-chat">DeepSeek V3 (Best Value)</option>
-              <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
-              <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
-              <option value="meta-llama/llama-3.1-405b-instruct">Llama 3.1 405B</option>
-              <option value="cohere/command-r-plus">Command R+ (128k)</option>
-            </optgroup>
-            <optgroup label="🚀 GPT Models">
-              <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
-              <option value="openai/gpt-4">GPT-4</option>
-              <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            </optgroup>
-            <optgroup label="🧠 Claude Models">
-              <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-              <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
-              <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
-              <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
-            </optgroup>
-            <optgroup label="💎 Gemini Models">
-              <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
-              <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
-              <option value="google/gemini-pro">Gemini Pro</option>
-            </optgroup>
-            <optgroup label="🦙 Open Source">
-              <option value="meta-llama/llama-3-70b-instruct">Llama 3 70B</option>
-              <option value="mistralai/mistral-large">Mistral Large</option>
-              <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
-              <option value="microsoft/wizardlm-2-8x22b">WizardLM 2 8x22B</option>
-            </optgroup>
-            <optgroup label="🎨 Image Generation">
-              <option value="black-forest-labs/flux.2-klein-4b">Flux.2 Klein 4B (OpenRouter)</option>
-              <option value="fal-ai/z-image/turbo">Z-Image Turbo (fal.ai - Fastest)</option>
-            </optgroup>
-            <optgroup label="🎬 Video Generation">
-              <option value="fal-ai/kling-video/v2.6/pro/text-to-video">Kling 2.6 Pro (5s video)</option>
-            </optgroup>
+            <!-- Populated dynamically from CONFIG.models -->
           </select>
           <button class="clear-btn" onclick="app.exportChat()">📥 Export</button>
           <button class="clear-btn" onclick="app.showSettings()">⚙️</button>
@@ -927,61 +884,148 @@
   <script>
     marked.setOptions({ breaks: true, gfm: true });
 
-    const app = {
-      // Model pricing (per million tokens)
-      pricing: {
-        // Free models
-        'xiaomi/mimo-v2-flash:free': { input: 0, output: 0 },
-        'google/gemma-2-9b-it:free': { input: 0, output: 0 },
-        'meta-llama/llama-3.1-8b-instruct:free': { input: 0, output: 0 },
-        'microsoft/phi-3-mini-128k-instruct:free': { input: 0, output: 0 },
-        'qwen/qwen-2-7b-instruct:free': { input: 0, output: 0 },
-        // Frontier models (open source)
-        'deepseek/deepseek-chat': { input: 0.27, output: 1.10 },
-        'qwen/qwen-2.5-72b-instruct': { input: 0.35, output: 0.70 },
-        'meta-llama/llama-3.3-70b-instruct': { input: 0.35, output: 0.40 },
-        'meta-llama/llama-3.1-405b-instruct': { input: 2.70, output: 2.70 },
-        'cohere/command-r-plus': { input: 3, output: 15 },
-        // Paid models
-        'openai/gpt-4-turbo': { input: 10, output: 30 },
-        'openai/gpt-4': { input: 30, output: 60 },
-        'openai/gpt-3.5-turbo': { input: 0.5, output: 1.5 },
-        'anthropic/claude-3.5-sonnet': { input: 3, output: 15 },
-        'anthropic/claude-3-opus': { input: 15, output: 75 },
-        'anthropic/claude-3-sonnet': { input: 3, output: 15 },
-        'anthropic/claude-3-haiku': { input: 0.25, output: 1.25 },
-        'google/gemini-pro-1.5': { input: 3.5, output: 10.5 },
-        'google/gemini-flash-1.5': { input: 0.35, output: 1.05 },
-        'google/gemini-pro': { input: 0.5, output: 1.5 },
-        'meta-llama/llama-3-70b-instruct': { input: 0.7, output: 0.8 },
-        'mistralai/mistral-large': { input: 4, output: 12 },
-        'mistralai/mixtral-8x7b-instruct': { input: 0.5, output: 0.5 },
-        'microsoft/wizardlm-2-8x22b': { input: 1.0, output: 1.0 },
-        // Image generation (cost per image, not per token)
-        'black-forest-labs/flux.2-klein-4b': { input: 0.014, output: 0 },
-        'fal-ai/z-image/turbo': { input: 0.005, output: 0 },
-        // Video generation (cost per video)
-        'fal-ai/kling-video/v2.6/pro/text-to-video': { input: 0.70, output: 0 }
+    // ============================================
+    // CONFIGURATION - Single source of truth
+    // ============================================
+    const CONFIG = {
+      defaults: {
+        model: 'anthropic/claude-3.5-sonnet',
+        language: 'en'
       },
+
+      // All models with pricing (per million tokens, or per generation for image/video)
+      models: [
+        // Free Models
+        { id: 'xiaomi/mimo-v2-flash:free', name: 'MiMo V2 Flash (Free)', group: 'Free Models', icon: '🎁', input: 0, output: 0 },
+        { id: 'google/gemma-2-9b-it:free', name: 'Gemma 2 9B (Free)', group: 'Free Models', icon: '🎁', input: 0, output: 0 },
+        { id: 'meta-llama/llama-3.1-8b-instruct:free', name: 'Llama 3.1 8B (Free)', group: 'Free Models', icon: '🎁', input: 0, output: 0 },
+        { id: 'microsoft/phi-3-mini-128k-instruct:free', name: 'Phi-3 Mini (Free)', group: 'Free Models', icon: '🎁', input: 0, output: 0 },
+        { id: 'qwen/qwen-2-7b-instruct:free', name: 'Qwen 2 7B (Free)', group: 'Free Models', icon: '🎁', input: 0, output: 0 },
+        // Frontier (Open Source)
+        { id: 'deepseek/deepseek-chat', name: 'DeepSeek V3 (Best Value)', group: 'Frontier (Open Source)', icon: '🌟', input: 0.27, output: 1.10 },
+        { id: 'qwen/qwen-2.5-72b-instruct', name: 'Qwen 2.5 72B', group: 'Frontier (Open Source)', icon: '🌟', input: 0.35, output: 0.70 },
+        { id: 'meta-llama/llama-3.3-70b-instruct', name: 'Llama 3.3 70B', group: 'Frontier (Open Source)', icon: '🌟', input: 0.35, output: 0.40 },
+        { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B', group: 'Frontier (Open Source)', icon: '🌟', input: 2.70, output: 2.70 },
+        { id: 'cohere/command-r-plus', name: 'Command R+ (128k)', group: 'Frontier (Open Source)', icon: '🌟', input: 3, output: 15 },
+        // GPT Models
+        { id: 'openai/gpt-4-turbo', name: 'GPT-4 Turbo', group: 'GPT Models', icon: '🚀', input: 10, output: 30 },
+        { id: 'openai/gpt-4', name: 'GPT-4', group: 'GPT Models', icon: '🚀', input: 30, output: 60 },
+        { id: 'openai/gpt-3.5-turbo', name: 'GPT-3.5 Turbo', group: 'GPT Models', icon: '🚀', input: 0.5, output: 1.5 },
+        // Claude Models
+        { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', group: 'Claude Models', icon: '🧠', input: 3, output: 15 },
+        { id: 'anthropic/claude-3-opus', name: 'Claude 3 Opus', group: 'Claude Models', icon: '🧠', input: 15, output: 75 },
+        { id: 'anthropic/claude-3-sonnet', name: 'Claude 3 Sonnet', group: 'Claude Models', icon: '🧠', input: 3, output: 15 },
+        { id: 'anthropic/claude-3-haiku', name: 'Claude 3 Haiku', group: 'Claude Models', icon: '🧠', input: 0.25, output: 1.25 },
+        // Gemini Models
+        { id: 'google/gemini-pro-1.5', name: 'Gemini 1.5 Pro', group: 'Gemini Models', icon: '💎', input: 3.5, output: 10.5 },
+        { id: 'google/gemini-flash-1.5', name: 'Gemini 1.5 Flash', group: 'Gemini Models', icon: '💎', input: 0.35, output: 1.05 },
+        { id: 'google/gemini-pro', name: 'Gemini Pro', group: 'Gemini Models', icon: '💎', input: 0.5, output: 1.5 },
+        // Open Source
+        { id: 'meta-llama/llama-3-70b-instruct', name: 'Llama 3 70B', group: 'Open Source', icon: '🦙', input: 0.7, output: 0.8 },
+        { id: 'mistralai/mistral-large', name: 'Mistral Large', group: 'Open Source', icon: '🦙', input: 4, output: 12 },
+        { id: 'mistralai/mixtral-8x7b-instruct', name: 'Mixtral 8x7B', group: 'Open Source', icon: '🦙', input: 0.5, output: 0.5 },
+        { id: 'microsoft/wizardlm-2-8x22b', name: 'WizardLM 2 8x22B', group: 'Open Source', icon: '🦙', input: 1.0, output: 1.0 },
+        // Image Generation
+        { id: 'black-forest-labs/flux.2-klein-4b', name: 'Flux.2 Klein 4B (OpenRouter)', group: 'Image Generation', icon: '🎨', input: 0.014, output: 0 },
+        { id: 'fal-ai/z-image/turbo', name: 'Z-Image Turbo (fal.ai - Fastest)', group: 'Image Generation', icon: '🎨', input: 0.005, output: 0 },
+        // Video Generation
+        { id: 'fal-ai/kling-video/v2.6/pro/text-to-video', name: 'Kling 2.6 Pro (5s video)', group: 'Video Generation', icon: '🎬', input: 0.70, output: 0 }
+      ],
+
+      // Internationalization strings
+      i18n: {
+        en: { langChanged: 'Language changed to English', thinking: 'Thinking...', copied: 'Copied!', copiedMsg: 'Message copied!', stopped: 'Generation stopped' },
+        cs: { langChanged: 'Jazyk změněn na češtinu', thinking: 'Přemýšlím...', copied: 'Zkopírováno!', copiedMsg: 'Zpráva zkopírována!', stopped: 'Generování zastaveno', respondIn: 'You must respond in Czech language (čeština). Always write your responses in Czech.' },
+        fr: { langChanged: 'Langue changée en français', thinking: 'Réflexion...', copied: 'Copié!', copiedMsg: 'Message copié!', stopped: 'Génération arrêtée', respondIn: 'You must respond in French language (français). Always write your responses in French.' },
+        de: { langChanged: 'Sprache auf Deutsch geändert', thinking: 'Denke nach...', copied: 'Kopiert!', copiedMsg: 'Nachricht kopiert!', stopped: 'Generierung gestoppt', respondIn: 'You must respond in German language (Deutsch). Always write your responses in German.' },
+        uk: { langChanged: 'Мову змінено на українську', thinking: 'Думаю...', copied: 'Скопійовано!', copiedMsg: 'Повідомлення скопійовано!', stopped: 'Генерацію зупинено', respondIn: 'You must respond in Ukrainian language (українська). Always write your responses in Ukrainian.' },
+        ru: { langChanged: 'Язык изменён на русский', thinking: 'Думаю...', copied: 'Скопировано!', copiedMsg: 'Сообщение скопировано!', stopped: 'Генерация остановлена', respondIn: 'You must respond in Russian language (русский). Always write your responses in Russian.' }
+      },
+
+      // Local model quick-switch options
+      localModels: [
+        { id: 'qwen2.5:7b', name: 'Qwen 2.5 7B', icon: '🧠', label: 'Qwen' },
+        { id: 'dolphin-mistral:7b', name: 'Dolphin-Mistral 7B', icon: '🐬', label: 'Dolphin' }
+      ]
+    };
+
+    // Derive pricing object from CONFIG.models
+    const PRICING = CONFIG.models.reduce((acc, m) => {
+      acc[m.id] = { input: m.input, output: m.output };
+      return acc;
+    }, {});
+
+    // Helper to get i18n string with fallback to English
+    const t = (key, lang) => CONFIG.i18n[lang]?.[key] || CONFIG.i18n.en[key] || key;
+
+    const app = {
+      // Model pricing (derived from CONFIG)
+      pricing: PRICING,
 
       conversations: {},
       currentConversationId: null,
       apiKey: '',
       falApiKey: '',
       systemPrompt: '',
-      model: 'anthropic/claude-3.5-sonnet',
+      model: CONFIG.defaults.model,
       endpointType: 'openrouter',
       customEndpoint: '',
       customApiKey: '',
       customModel: '',
       isLoading: false,
       editingMessageIndex: null,
-      language: 'en',
+      language: CONFIG.defaults.language,
       renderedMessageCount: 0,
       streamingElement: null,
       streamThrottleTimeout: null,
       pendingStreamUpdate: false,
       abortController: null,
+
+      // Populate model select from CONFIG
+      populateModelSelect() {
+        const select = document.getElementById('modelSelect');
+        select.innerHTML = '';
+
+        // Group models by their group
+        const groups = {};
+        CONFIG.models.forEach(model => {
+          if (!groups[model.group]) {
+            groups[model.group] = [];
+          }
+          groups[model.group].push(model);
+        });
+
+        // Create optgroups and options
+        Object.entries(groups).forEach(([groupName, models]) => {
+          const icon = models[0]?.icon || '';
+          const optgroup = document.createElement('optgroup');
+          optgroup.label = `${icon} ${groupName}`;
+
+          models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.id;
+            option.textContent = model.name;
+            optgroup.appendChild(option);
+          });
+
+          select.appendChild(optgroup);
+        });
+      },
+
+      // Populate local model switcher from CONFIG
+      populateLocalModelSwitcher() {
+        const container = document.getElementById('localModelSwitcher');
+        container.innerHTML = '';
+
+        CONFIG.localModels.forEach(model => {
+          const btn = document.createElement('button');
+          btn.className = 'model-switch-btn';
+          btn.dataset.model = model.id;
+          btn.textContent = `${model.icon} ${model.label}`;
+          btn.onclick = () => this.switchLocalModel(model.id);
+          container.appendChild(btn);
+        });
+      },
 
       init() {
         const saved = localStorage.getItem('conversations');
@@ -997,12 +1041,16 @@
         this.apiKey = localStorage.getItem('openrouter_api_key') || '';
         this.falApiKey = localStorage.getItem('fal_api_key') || '';
         this.systemPrompt = localStorage.getItem('system_prompt') || '';
-        this.model = localStorage.getItem('current_model') || 'anthropic/claude-3.5-sonnet';
+        this.model = localStorage.getItem('current_model') || CONFIG.defaults.model;
         this.endpointType = localStorage.getItem('endpoint_type') || 'openrouter';
         this.customEndpoint = localStorage.getItem('custom_endpoint') || '';
         this.customApiKey = localStorage.getItem('custom_api_key') || '';
         this.customModel = localStorage.getItem('custom_model') || '';
-        this.language = localStorage.getItem('language') || 'en';
+        this.language = localStorage.getItem('language') || CONFIG.defaults.language;
+
+        // Populate UI from CONFIG
+        this.populateModelSelect();
+        this.populateLocalModelSwitcher();
 
         const conversationIds = Object.keys(this.conversations);
         if (conversationIds.length === 0) {
@@ -1104,36 +1152,21 @@
       changeLanguage() {
         this.language = document.getElementById('languageSelect').value;
         localStorage.setItem('language', this.language);
-        const messages = {
-          en: 'Language changed to English',
-          cs: 'Jazyk změněn na češtinu',
-          fr: 'Langue changée en français',
-          de: 'Sprache auf Deutsch geändert',
-          uk: 'Мову змінено на українську',
-          ru: 'Язык изменён на русский'
-        };
-        this.showNotification(messages[this.language] || messages.en);
+        this.showNotification(t('langChanged', this.language));
       },
 
-      switchLocalModel(modelName) {
-        this.customModel = modelName;
-        localStorage.setItem('custom_model', modelName);
+      switchLocalModel(modelId) {
+        this.customModel = modelId;
+        localStorage.setItem('custom_model', modelId);
         this.updateModelDropdown();
 
         // Update active button state
         document.querySelectorAll('.model-switch-btn').forEach(btn => {
-          if (btn.dataset.model === modelName) {
-            btn.classList.add('active');
-          } else {
-            btn.classList.remove('active');
-          }
+          btn.classList.toggle('active', btn.dataset.model === modelId);
         });
 
-        const modelNames = {
-          'qwen2.5:7b': 'Qwen 2.5 7B',
-          'dolphin-mistral:7b': 'Dolphin-Mistral 7B'
-        };
-        this.showNotification(`Switched to ${modelNames[modelName] || modelName}`);
+        const model = CONFIG.localModels.find(m => m.id === modelId);
+        this.showNotification(`Switched to ${model?.name || modelId}`);
       },
 
       newConversation() {
@@ -1427,7 +1460,7 @@
         if (this.abortController) {
           this.abortController.abort();
           this.abortController = null;
-          this.showNotification('Generation stopped');
+          this.showNotification(t('stopped', this.language));
         }
       },
 
@@ -1438,7 +1471,7 @@
 
       copyMessage(content) {
         navigator.clipboard.writeText(content).then(() => {
-          this.showNotification('Message copied!');
+          this.showNotification(t('copiedMsg', this.language));
         });
       },
 
@@ -2042,14 +2075,7 @@
           // Build system prompt with language instruction
           let systemPrompt = this.systemPrompt || '';
           if (this.language !== 'en') {
-            const langInstructions = {
-              cs: 'You must respond in Czech language (čeština). Always write your responses in Czech.',
-              fr: 'You must respond in French language (français). Always write your responses in French.',
-              de: 'You must respond in German language (Deutsch). Always write your responses in German.',
-              uk: 'You must respond in Ukrainian language (українська). Always write your responses in Ukrainian.',
-              ru: 'You must respond in Russian language (русский). Always write your responses in Russian.'
-            };
-            const langInstruction = langInstructions[this.language];
+            const langInstruction = CONFIG.i18n[this.language]?.respondIn;
             if (langInstruction) {
               systemPrompt = systemPrompt ? `${systemPrompt}\n\n${langInstruction}` : langInstruction;
             }
@@ -2086,7 +2112,7 @@
           }
 
           // Show thinking indicator
-          this.updateStreamingMessage('*Thinking...*');
+          this.updateStreamingMessage(`*${t('thinking', this.language)}*`);
 
           // Create abort controller for stop button
           this.abortController = new AbortController();
