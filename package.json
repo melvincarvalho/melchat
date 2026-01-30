@@ -1,6 +1,6 @@
 {
   "name": "melchat",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "100+ AI models in one lightweight chat interface. GPT-4, Claude, Gemini, Llama, Qwen, and more - all in a single 69KB file.",
   "main": "dist/index.html",
   "bin": {
