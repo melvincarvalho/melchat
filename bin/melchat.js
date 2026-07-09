@@ -75,7 +75,7 @@ server.listen(flags.port, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════╗
   ║                                                   ║
-  ║   🤖 melchat v0.0.1                               ║
+  ║   🤖 melchat v0.0.3                               ║
   ║   100+ AI models in one interface                 ║
   ║                                                   ║
   ║   Running at: ${url.padEnd(31)}║
